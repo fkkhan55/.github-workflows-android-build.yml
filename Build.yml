@@ -1,0 +1,48 @@
+name: Android CI (Build APK)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout project
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # 2. gradlew permission fix
+    - name: Make gradlew executable
+      run: |
+        cd $GITHUB_WORKSPACE
+        chmod +x ./gradlew
+        ls -l ./gradlew
+
+    # 3. Set up Java JDK 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 17
+        cache: gradle
+
+    # 4. Set up Android SDK
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    # 5. Build APK (Debug)
+    - name: Build Debug APK
+      run: ./gradlew clean assembleDebug --stacktrace --warning-mode all
+
+    # 6. Upload APK Artifact (Downloadable APK)
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug-apk
+        path: app/build/outputs/apk/debug/*.apk
